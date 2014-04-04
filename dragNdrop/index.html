@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Drag and Drop Test</title>
+    <style type="text/css">
+        .body
+        {
+            top: 0px;
+            left: 0px;
+            width: 1024px;
+            height: 768px;
+            color: green;
+        }
+        #abc
+        {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background-color: rgb(0,0,0);
+        }
+        #tot
+        {
+            position: absolute;
+            top: 100px;
+            right: 100px;
+        }
+        
+        #drop
+        {
+            position: absolute;
+            top: 400px;
+            left: 400px;
+            width: 500px;
+            height: 500px;
+            border: 2px solid black;
+        }
+        #drop.overDrop
+        {
+            background-color: Blue;
+        }
+    </style>
+</head>
+<body>
+    <div class='body'>
+        <div id="drop">
+            Hey Drop here!!!
+        </div>
+        <div id='abc'>
+        </div>
+        <div id='tot'>
+        </div>
+    </div>
+</body>
+<script src="scripts/jquery.js" type="text/javascript"></script>
+<script>
+    function Util(elId) {
+        var el = document.getElementById(elId)
+        this.element = el;
+        this.getOffset = function () {
+            var _x = 0;
+            var _y = 0;
+            var _h = el.offsetHeight;
+            var _w = el.offsetWidth;
+            while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+                _x += el.offsetLeft - el.scrollLeft;
+                _y += el.offsetTop - el.scrollTop;
+                el = el.offsetParent;
+            }
+            return { top: _y, left: _x, right: _x + _h, bottom: _y + _h };
+        }
+
+        this.css = function (o) {
+            var s = "";
+            for (var i in o) {
+                s = s + i + ":" + o[i] + ";";
+            }
+            el.setAttribute("style", s);
+        }
+
+        this.addEvent = function (ev, func, useCapture) {
+            type = type ? type : false;
+            var events = ev.split(" ");
+            for (var i in events) {
+                el.addEventListener(events[i], func, useCapture);
+            }
+
+        }
+
+        this.getId = function () {
+            return this.element.id;
+
+        }
+        return this;
+    }
+
+</script>
+<script type="text/javascript">
+    function dragNdrop(o) {
+        var that = this;
+        var flag = false;
+        var posX = 0, posY = 0;
+        var top = 0, left = 0;
+
+        var dropElements = [];
+
+        var dragElement = Util(o.dragId);
+
+        for (var elementId in o.dropIds) {
+            var dropElement = Util(o.dropIds[elementId]);
+            alert(dropElement.getId());
+
+            if (!(dropElement == null)) {
+                dropElements.push({
+                    element: dropElement,
+                    top: dropElement.getOffset().top,
+                    left: dropElement.getOffset().left,
+                    right: dropElement.getOffset().right,
+                    bottom: dropElement.getOffset().bottom
+                });
+            }
+        }
+
+        //alert(dropElement.element.width());
+
+        dragElement.css({
+            '-webkit-touch-callout': 'none',
+            '-webkit-user-select': 'none',
+            '-khtml-user-select': 'none',
+            '-moz-user-select': 'none',
+            '-ms-user-select': 'none',
+            'user-select': 'none'
+        });
+
+        //alert(o.dropIds[0]);
+
+        var checkForDrop = function (x, y) {
+            console.log('mouse move triggered' + dropElements[0].top);
+            for (var dropElement in dropElements) {
+                if (x > dropElements[dropElement].left && x < dropElements[dropElement].right && y > dropElements[dropElement].top && y < dropElements[dropElement].bottom) {
+                    dropElements[dropElement].element.addClass('overDrop');
+                    dropElements[dropElement].element.css({
+                        'border-color': 'yellow'
+                    });
+                }
+                else {
+                    dropElements[dropElement].element.removeClass('overDrop');
+                    dropElements[dropElement].element.css({
+                        'border-color': 'black'
+                    });
+                }
+            }
+
+        }
+
+
+        function dragStart(e) {
+            e.preDefault();
+            var e = e.touches ? e.touches[0] : e;
+            flag = true;
+            console.log('mouse down triggered');
+            //alert(e.originale.touches);
+            posX = e.pageX;
+            posY = e.pageY;
+            top = that.position().top;
+            left = that.position().left;
+
+        }
+
+        function dragMove(e) {
+            e.preDefault();
+            var e = e.touches ? e.touches[0] : e;
+
+            if (flag) {
+                document.getElementById('tot').innerHTML = 'top' + Math.round(top + (e.pageY - posY));
+                that.css({
+                    'position': 'absolute',
+                    'top': Math.round(top + (e.pageY - posY)) + 'px',
+                    'left': Math.round(left + (e.pageX - posX)) + 'px'
+                });
+
+                checkForDrop(e.pageX, e.pageY);
+            }
+        }
+
+        function dragEnd(e) {
+            e.preventDefault();
+            var e = e.touches ? e.touches[0] : e;
+            flag = false;
+            console.log('mouse up triggered' + e.target);
+        }
+
+
+        dragElement.addEvent('mousedown tochstart', dragStart, false);
+        dragElement.addEvent('mousemove touchmove', dragMove, false);
+        dragElement.addEvent('mouseup touchend', dragMove, false);
+
+    };
+
+
+    $(document).ready(function () {
+        dragNdrop({ dragId: 'abc', dropIds: ['drop', 'drop1'] })
+    });
+
+
+
+</script>
+
+</html>
